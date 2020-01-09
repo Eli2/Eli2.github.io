@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Color</title>
+<link rel="stylesheet" href="style.css">
+<style>
+input:invalid {
+	border: 2px solid red;
+}
+.color-block {
+	display: grid;
+	grid-gap: 6px;
+    grid-template-rows: max-content max-content;
+}
+
+#color-val-display {
+	width: 100px;
+	height: 100px;
+}
+
+.color-out {
+    display: grid;
+    grid-gap: 3px;
+    grid-template-columns: max-content max-content;
+}
+</style>
+</head>
+<body>
+<div class="color-block">
+	<fieldset class="color-out">
+        <legend>input</legend>
+        <label>Separator:</label>
+		<input id="color-input-separator" type="text" value=" " />
+		<label>RGB int</label>
+		<input id="color-input-rgb-int" type="text" />
+	</fieldset>
+	<fieldset class="color-out">
+        <legend>value</legend>
+	    <input id="color-picker" type="color" value="#000000">
+	    <div id="color-val-display"></div>
+	</fieldset>
+	<fieldset class="color-out">
+        <legend>output</legend>
+		<label>Separator:</label>
+		<input id="color-value-separator" type="text" value=", " />
+		<label>RGB int</label>
+		<input id="color-result-rgb-int" type="text" />
+		<label>RGB float</label>
+		<input id="color-result-rgb-float" type="text" />
+	</fieldset>
+</div>
+
+<script type="text/javascript">
+    function escapeRegex(s) {
+        return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    }
+    function colorHexToIntRgb(hexColor) {
+    	const parse = (pos)=>{
+    		const v = hexColor.substring(pos, pos + 2);
+    		return parseInt('0x' + v);
+    	}
+        const r = parse(1);
+        const g = parse(3);
+        const b = parse(5);
+        return [r, g, b];
+    }
+    function colorIntRgbToFloatRgb(intRgb) {
+    	return intRgb.map((val)=>{
+    		return (1 / 255) * val;
+    	});
+    }
+
+    const inputSeparator   = document.getElementById('color-input-separator');
+    const inputColorRgbInt = document.getElementById('color-input-rgb-int');
+    const picker           = document.getElementById('color-picker');
+    const separator        = document.getElementById('color-value-separator');
+    const resultRgbInt     = document.getElementById('color-result-rgb-int');
+    const resultRgbFloat   = document.getElementById('color-result-rgb-float');
+    
+    const inputColorRgbIntUpdateRegex = ()=>{
+        const s = escapeRegex(inputSeparator.value);
+    	inputColorRgbInt.pattern = "[0-9]+"+s+"[0-9]+"+s+"[0-9]+";
+    }
+    inputSeparator.oninput = (ev)=>{
+    	inputColorRgbIntUpdateRegex();
+    }
+    inputColorRgbIntUpdateRegex();
+
+
+    inputColorRgbInt.oninput =(ev)=>{
+    	if(!ev.target.validity.valid) {
+    		return;
+    	}
+        const split = inputColorRgbInt.value.split(inputSeparator.value);
+        if(split.length != 3) {
+        	return;
+        }
+        const hex = split.map(v=>parseInt(v).toString(16).padStart(2, '0'));
+        picker.value = '#' + hex.join('');
+        valueChanged();
+    }
+
+	const valueChanged = ()=>{
+		const val = picker.value;
+
+        document.getElementById('color-val-display').style.backgroundColor = val;
+
+		const foo = colorHexToIntRgb(val);
+
+        resultRgbInt.value = foo.join(separator.value);
+        const bar = colorIntRgbToFloatRgb(foo);
+        const fixed = bar.map(v=>v.toFixed(3));
+		resultRgbFloat.value = fixed.join(separator.value);
+        console.log(foo);
+	}
+
+	picker.oninput = valueChanged;
+	picker.onchange = valueChanged;
+</script>
+</body>
+</html>
